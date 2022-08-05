@@ -63,14 +63,14 @@ import com.alibaba.csp.sentinel.slots.block.flow.TrafficShapingController;
  */
 public class WarmUpController implements TrafficShapingController {
 
-    protected double count;
+    protected double count;                  // 阈值
     private int coldFactor;
-    protected int warningToken = 0;
-    private int maxToken;
-    protected double slope;
+    protected int warningToken = 0;     // 警戒水位
+    private int maxToken;                       // 总容量
+    protected double slope;                   // 斜率，cold ----> count 的那条斜线的斜率
 
-    protected AtomicLong storedTokens = new AtomicLong(0);
-    protected AtomicLong lastFilledTime = new AtomicLong(0);
+    protected AtomicLong storedTokens = new AtomicLong(0);  // 当前水位
+    protected AtomicLong lastFilledTime = new AtomicLong(0);  // 上次添加令牌时间
 
     public WarmUpController(double count, int warmUpPeriodInSec, int coldFactor) {
         construct(count, warmUpPeriodInSec, coldFactor);

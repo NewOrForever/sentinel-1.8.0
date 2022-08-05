@@ -27,7 +27,9 @@ import com.alibaba.csp.sentinel.node.Node;
  */
 public class RateLimiterController implements TrafficShapingController {
 
+    // 超时时间
     private final int maxQueueingTimeMs;
+    // 阈值
     private final double count;
 
     private final AtomicLong latestPassedTime = new AtomicLong(-1);
