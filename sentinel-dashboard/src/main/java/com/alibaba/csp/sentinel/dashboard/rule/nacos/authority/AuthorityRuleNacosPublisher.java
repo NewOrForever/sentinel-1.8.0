@@ -38,8 +38,8 @@ public class AuthorityRuleNacosPublisher implements DynamicNacosRulePublisher<Li
 
     @Autowired
     private ConfigService configService;
-    @Autowired
-    private Converter<List<AuthorityRuleEntity>, String> converter;
+//    @Autowired
+//    private Converter<List<AuthorityRuleEntity>, String> converter;
 
     @Override
     public void publish(String app, List<AuthorityRuleEntity> rules) throws Exception {
@@ -48,7 +48,7 @@ public class AuthorityRuleNacosPublisher implements DynamicNacosRulePublisher<Li
             return;
         }
         String dataId = app + NacosConfigUtil.AUTHORITY_DATA_ID_POSTFIX;
-        boolean res = configService.publishConfig(dataId, NacosConfigUtil.GROUP_ID, converter.convert(rules));
+        boolean res = configService.publishConfig(dataId, NacosConfigUtil.GROUP_ID, NacosConfigUtil.convertToRule(rules));
         Assert.isTrue(res, "publish authority rules fail, dataId: " + dataId + ", group: " + NacosConfigUtil.GROUP_ID);
     }
 }

@@ -174,6 +174,9 @@ public class SystemController {
     @AuthAction(PrivilegeType.WRITE_RULE)
     public Result<SystemRuleEntity> apiUpdateIfNotNull(Long id, String app, Double highestSystemLoad,
                                                        Double highestCpuUsage, Long avgRt, Long maxThread, Double qps) {
+        /**
+         * TODO 修改时页面需要传入 app，现在传入的app 的值为空
+          */
         if (id == null) {
             return Result.ofFail(-1, "id can't be null");
         }
@@ -222,7 +225,7 @@ public class SystemController {
         entity.setGmtModified(date);
         try {
             entity = repository.save(entity);
-            publishRules(app);
+            publishRules(entity.getApp());
         } catch (Throwable throwable) {
             logger.error("save error:", throwable);
             return Result.ofThrowable(-1, throwable);
