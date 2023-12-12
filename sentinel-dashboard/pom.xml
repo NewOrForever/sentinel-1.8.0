@@ -102,7 +102,8 @@
         <dependency>
             <groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-datasource-nacos</artifactId>
-            <scope>test</scope>
+            <!--改造dashboard 需要放开 scope 不然只能在 test 下使用-->
+        <!-- <scope>test</scope>-->
         </dependency>
         <!-- for Apollo rule publisher sample -->
         <dependency>

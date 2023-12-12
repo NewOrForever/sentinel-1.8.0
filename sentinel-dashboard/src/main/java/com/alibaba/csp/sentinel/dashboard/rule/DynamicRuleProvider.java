@@ -21,5 +21,23 @@ package com.alibaba.csp.sentinel.dashboard.rule;
  */
 public interface DynamicRuleProvider<T> {
 
-    T getRules(String appName) throws Exception;
+    default T getRules(String appName) throws Exception {
+        return null;
+    }
+
+    default T getRules(String appName, String ip, Integer port) throws Exception {
+        return null;
+    }
+
+
+    /**
+     * TODO 加载规则并更新内存和 ids 后续在优化吧，避免直接修改 nacos 配置数据后 ids 落后的问题
+     * 不不不，这个不能弄，不应该在 nacos 中直接修改 sentinel 的规则配置，而是应该在 sentinel-dashboard 中修改避免不必要的错误数据
+     * Load rules from the data source.
+     * getRules -> saveAll ->  initIds
+     * @param appName
+     * @return
+     * @throws Exception
+     */
+//    T loadRules(String appName) throws Exception;
 }

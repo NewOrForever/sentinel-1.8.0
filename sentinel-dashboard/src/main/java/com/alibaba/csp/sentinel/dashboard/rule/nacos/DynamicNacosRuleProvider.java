@@ -13,32 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.csp.sentinel.dashboard.repository.rule;
+package com.alibaba.csp.sentinel.dashboard.rule.nacos;
 
-import java.util.concurrent.atomic.AtomicLong;
-
-import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.AuthorityRuleEntity;
-
-import org.springframework.stereotype.Component;
+import com.alibaba.csp.sentinel.dashboard.rule.DynamicRuleProvider;
 
 /**
- * In-memory storage for authority rules.
- *
  * @author Eric Zhao
- * @since 0.2.1
+ * @since 1.4.0
  */
-@Component
-public class InMemAuthorityRuleStore extends InMemoryRuleRepositoryAdapter<AuthorityRuleEntity> {
+public interface DynamicNacosRuleProvider<T> extends DynamicRuleProvider<T> {
+    /**
+     * 初始化规则 - 客户端发送心跳包进来注册新的 machine 时进行初始化 rules
+     *
+     * @param app
+     * @return
+     * @throws Exception
+     */
+    void initRules(String app) throws Exception;
 
-    private static AtomicLong ids = new AtomicLong(0);
 
-    @Override
-    protected long nextId() {
-        return ids.incrementAndGet();
-    }
 
-    @Override
-    protected void initIds(long maxId) {
-        ids.set(maxId);
-    }
 }

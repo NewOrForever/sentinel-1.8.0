@@ -37,6 +37,11 @@ public class InMemParamFlowRuleStore extends InMemoryRuleRepositoryAdapter<Param
     }
 
     @Override
+    protected void initIds(long maxId) {
+        ids.set(maxId);
+    }
+
+    @Override
     protected ParamFlowRuleEntity preProcess(ParamFlowRuleEntity entity) {
         if (entity != null && entity.isClusterMode()) {
             ParamFlowClusterConfig config = entity.getClusterConfig();

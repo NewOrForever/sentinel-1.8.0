@@ -19,16 +19,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.RuleEntity;
 import com.alibaba.csp.sentinel.dashboard.discovery.MachineInfo;
+import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.util.AssertUtil;
+import com.alibaba.nacos.common.utils.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author leyou
  */
 public abstract class InMemoryRuleRepositoryAdapter<T extends RuleEntity> implements RuleRepository<T, Long> {
-
+    private final Logger logger = LoggerFactory.getLogger(InMemoryRuleRepositoryAdapter.class);
     /**
      * {@code <machine, <id, rule>>}
      */
@@ -38,6 +44,8 @@ public abstract class InMemoryRuleRepositoryAdapter<T extends RuleEntity> implem
     private Map<String, Map<Long, T>> appRules = new ConcurrentHashMap<>(16);
 
     private static final int MAX_RULES_SIZE = 10000;
+
+    private final AtomicBoolean hasInit = new AtomicBoolean(false);
 
     @Override
     public T save(T entity) {
@@ -126,4 +134,22 @@ public abstract class InMemoryRuleRepositoryAdapter<T extends RuleEntity> implem
      * @return next unused id
      */
     abstract protected long nextId();
+
+    public void initRules(List<T> rules, String app) {
+        logger.debug("{}初始化规则状态：{} ----------> {}" , app, hasInit.get(), this.getClass().getSimpleName());
+        if (hasInit.compareAndSet(false, true)) {
+            logger.debug("{}开始初始化规则 ......" , app);
+            List<T> initSaRuleveds = saveAll(rules);
+            if (CollectionUtils.isNotEmpty(initSaRuleveds)) {
+                // ids 需要更新数据为最大的id
+                initSaRuleveds.stream().mapToLong(RuleEntity::getId).max().ifPresent(maxId -> {
+                    initIds(maxId);
+                    logger.debug("{}初始化规则完成，最大id为：{}" , app, maxId);
+                });
+            }
+    }
+}
+
+    abstract protected void initIds(long maxId);
+
 }

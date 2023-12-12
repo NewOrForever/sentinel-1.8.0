@@ -15,6 +15,8 @@
  */
 package com.alibaba.csp.sentinel.dashboard.repository.rule;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.FlowRuleEntity;
@@ -35,6 +37,11 @@ public class InMemFlowRuleStore extends InMemoryRuleRepositoryAdapter<FlowRuleEn
     @Override
     protected long nextId() {
         return ids.incrementAndGet();
+    }
+
+    @Override
+    protected void initIds(long maxId) {
+        ids.set(maxId);
     }
 
     @Override

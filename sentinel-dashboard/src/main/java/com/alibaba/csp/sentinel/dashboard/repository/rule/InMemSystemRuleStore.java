@@ -33,4 +33,9 @@ public class InMemSystemRuleStore extends InMemoryRuleRepositoryAdapter<SystemRu
     protected long nextId() {
         return ids.incrementAndGet();
     }
+
+    @Override
+    protected void initIds(long maxId) {
+        ids.set(maxId);
+    }
 }
