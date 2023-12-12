@@ -31,6 +31,36 @@ public final class NacosConfigUtil {
 
     public static final String GROUP_ID = "SENTINEL_GROUP";
 
+    /**
+     * 这些后缀是发布到 nacos 的配置文件的后缀，客户端使用 nacos 的配置中心时，需要在配置文件中指定这些后缀
+     * spring:
+     *   cloud:
+     *     # sentinel 控制台
+     *     # @see https://github.com/alibaba/Sentinel/wiki/%E5%90%AF%E5%8A%A8%E9%85%8D%E7%BD%AE%E9%A1%B9
+     *     sentinel:
+     *       web-context-unify: false
+     *       transport:
+     *         # sentinel控制台地址
+     *         dashboard: localhost:9000
+     *         # 指定应用与Sentinel控制台交互的端口，应用本地会起一个该端口占用的HttpServer
+     *         # 默认是8719 占用会自动 +1
+     *         #        port: 8719
+     *       datasource:
+     *         flow-rules:
+     *           nacos:
+     *             server-addr: nacosIp:8848
+     *             dataId: ${spring.application.name}-flow-rules
+     *             groupId: SENTINEL_GROUP #注意groupId对应SentinelDashboard中的定义
+     *             data-type: json
+     *             rule-type: flow
+     *         degrade-rules:
+     *           nacos:
+     *             server-addr: 123.60.150.23:8848
+     *             dataId: ${spring.application.name}-degrade-rules
+     *             groupId: SENTINEL_GROUP
+     *             data-type: json
+     *             rule-type: degrade
+     */
     public static final String FLOW_DATA_ID_POSTFIX = "-flow-rules";
     public static final String DEGRADE_DATA_ID_POSTFIX = "-degrade-rules";
     public static final String AUTHORITY_DATA_ID_POSTFIX = "-authority-rules";
