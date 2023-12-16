@@ -44,9 +44,6 @@ public class FlowRuleNacosProvider implements DynamicNacosRuleProvider<List<Flow
 
     @Autowired
     private InMemoryRuleRepositoryAdapter<FlowRuleEntity> repository;
-    @Autowired
-    @Qualifier("flowRuleNacosProvider")
-    private DynamicRuleProvider<List<FlowRuleEntity>> ruleProvider;
 
     @Override
     public List<FlowRuleEntity> getRules(String appName) throws Exception {
@@ -60,7 +57,7 @@ public class FlowRuleNacosProvider implements DynamicNacosRuleProvider<List<Flow
 
     @Override
     public void initRules(String app) throws Exception {
-        List<FlowRuleEntity> rules = ruleProvider.getRules(app);
+        List<FlowRuleEntity> rules = this.getRules(app);
         repository.initRules(rules, app);
     }
 }

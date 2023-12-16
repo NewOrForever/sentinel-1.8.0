@@ -81,6 +81,10 @@ public final class NacosConfigUtil {
     public static final String SERVER_FLOW_CONFIG_DATA_ID_POSTFIX = "-cs-flow-config";
     public static final String SERVER_NAMESPACE_SET_DATA_ID_POSTFIX = "-cs-namespace-set";
 
+    // 超时时间
+    public static final int READ_TIMEOUT = 3000;
+
+
     private NacosConfigUtil() {}
 
     /**
@@ -112,7 +116,7 @@ public final class NacosConfigUtil {
      */
     public static String convertToGatewayFlowRule(List<? extends GatewayFlowRuleEntity> entities){
         return JSON.toJSONString(
-                entities.stream().map(r -> r.toGatewayFlowRule())
+                entities.stream().map(GatewayFlowRuleEntity::toGatewayFlowRule)
                         .collect(Collectors.toList()));
     }
 

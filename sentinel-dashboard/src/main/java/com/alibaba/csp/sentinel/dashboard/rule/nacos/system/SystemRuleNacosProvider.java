@@ -46,9 +46,6 @@ public class SystemRuleNacosProvider implements DynamicNacosRuleProvider<List<Sy
 
     @Autowired
     private InMemoryRuleRepositoryAdapter<SystemRuleEntity> repository;
-    @Autowired
-    @Qualifier("systemRuleNacosProvider")
-    private DynamicRuleProvider<List<SystemRuleEntity>> ruleProvider;
 
     @Override
     public List<SystemRuleEntity> getRules(String appName) throws Exception {
@@ -62,7 +59,7 @@ public class SystemRuleNacosProvider implements DynamicNacosRuleProvider<List<Sy
 
     @Override
     public void initRules(String app) throws Exception {
-        List<SystemRuleEntity> rules = ruleProvider.getRules(app);
+        List<SystemRuleEntity> rules = this.getRules(app);
         repository.initRules(rules, app);
     }
 }

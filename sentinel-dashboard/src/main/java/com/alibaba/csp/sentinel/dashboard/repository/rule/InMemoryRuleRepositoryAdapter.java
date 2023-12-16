@@ -45,7 +45,12 @@ public abstract class InMemoryRuleRepositoryAdapter<T extends RuleEntity> implem
 
     private static final int MAX_RULES_SIZE = 10000;
 
-    private final AtomicBoolean hasInit = new AtomicBoolean(false);
+    /**
+     * 从 AtomicBoolean 升级成 ConcurrentHashMap<String, AtomicBoolean>
+     * 1. 保证每个app只初始化一次
+     * 2. 保证每个app的初始化状态是独立的，避免多个app同时初始化时，一个app初始化完成后，另一个app的初始化状态被置为true
+     */
+    private final ConcurrentHashMap<String, AtomicBoolean> appInitMap = new ConcurrentHashMap<>(16);
 
     @Override
     public T save(T entity) {
@@ -136,8 +141,10 @@ public abstract class InMemoryRuleRepositoryAdapter<T extends RuleEntity> implem
     abstract protected long nextId();
 
     public void initRules(List<T> rules, String app) {
-        logger.debug("{}初始化规则状态：{} ----------> {}" , app, hasInit.get(), this.getClass().getSimpleName());
-        if (hasInit.compareAndSet(false, true)) {
+        logger.debug("{}初始化规则状态：{} ----------> {}" , app,
+                appInitMap.getOrDefault(app, new AtomicBoolean(false)), this.getClass().getSimpleName());
+        AtomicBoolean appHasInit = appInitMap.computeIfAbsent(app, v -> new AtomicBoolean(false));
+        if (appHasInit.compareAndSet(false, true)) {
             logger.debug("{}开始初始化规则 ......" , app);
             List<T> initSaRuleveds = saveAll(rules);
             if (CollectionUtils.isNotEmpty(initSaRuleveds)) {

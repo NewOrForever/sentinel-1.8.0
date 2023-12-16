@@ -47,9 +47,6 @@ public class DegradeRuleNacosProvider implements DynamicNacosRuleProvider<List<D
     private Converter<String, List<DegradeRuleEntity>> converter;
 
     @Autowired
-    @Qualifier("degradeRuleNacosProvider")
-    private DynamicRuleProvider<List<DegradeRuleEntity>> ruleProvider;
-    @Autowired
     private InMemDegradeRuleStore repository;
 
     @Override
@@ -64,7 +61,7 @@ public class DegradeRuleNacosProvider implements DynamicNacosRuleProvider<List<D
 
     @Override
     public void initRules(String app) throws Exception {
-        List<DegradeRuleEntity> rules = ruleProvider.getRules(app);
+        List<DegradeRuleEntity> rules = getRules(app);
         repository.initRules(rules, app);
     }
 }

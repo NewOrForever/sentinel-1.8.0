@@ -143,8 +143,13 @@ public final class GatewayRuleManager {
             }
         }
 
+        /**
+         * GatewayFlowRule 网关流控规则转成 ParamFlowRule 热点参数规则
+         * @param conf
+         */
         private synchronized void applyGatewayRuleInternal(Set<GatewayFlowRule> conf) {
             if (conf == null || conf.isEmpty()) {
+                // 网关流控规则为空，清空 2 个 map
                 applyToConvertedParamMap(new HashSet<ParamFlowRule>());
                 GATEWAY_RULE_MAP.clear();
                 return;
@@ -161,6 +166,7 @@ public final class GatewayRuleManager {
                 }
                 String resourceName = rule.getResource();
                 if (rule.getParamItem() == null) {
+                    // 没有配置参数限流的网关规则需要记录下来，后面转成ParamFlowRule时单独处理
                     // Cache the rules with no parameter config, then skip.
                     List<GatewayFlowRule> noParamList = noParamMap.get(resourceName);
                     if (noParamList == null) {
@@ -169,13 +175,17 @@ public final class GatewayRuleManager {
                     }
                     noParamList.add(rule);
                 } else {
+                    // 有配置参数限流的网关规则
+                    // 该资源的参数索引位置
                     int idx = getIdxInternal(idxMap, resourceName);
                     // Convert to parameter flow rule.
                     if (paramFlowRules.add(GatewayRuleConverter.applyToParamRule(rule, idx))) {
                         idxMap.put(rule.getResource(), idx + 1);
                     }
+                    // 缓存参数值的正则表达式
                     cacheRegexPattern(rule.getParamItem());
                 }
+                // 缓存网关规则
                 // Apply to the gateway rule map.
                 Set<GatewayFlowRule> ruleSet = gatewayRuleMap.get(resourceName);
                 if (ruleSet == null) {
@@ -184,6 +194,7 @@ public final class GatewayRuleManager {
                 }
                 ruleSet.add(rule);
             }
+            // 处理没有配置参数限流的网关规则转成 ParamFlowRule 时，不会去添加 ParamFlowItem
             // Handle non-param mode rules.
             for (Map.Entry<String, List<GatewayFlowRule>> e : noParamMap.entrySet()) {
                 List<GatewayFlowRule> rules = e.getValue();
@@ -192,11 +203,13 @@ public final class GatewayRuleManager {
                 }
                 for (GatewayFlowRule rule : rules) {
                     int idx = getIdxInternal(idxMap, e.getKey());
+                    // 非参数限流，则会在参数最后一个位置置入预设的常量，达到普通流控的效果
                     // Always use the same index (the last position).
                     paramFlowRules.add(GatewayRuleConverter.applyNonParamToParamRule(rule, idx));
                 }
             }
 
+            // 转换后的 ParamFlowRule 缓存起来
             applyToConvertedParamMap(paramFlowRules);
 
             GATEWAY_RULE_MAP.clear();

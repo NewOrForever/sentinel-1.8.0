@@ -13,22 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.csp.sentinel.dashboard.rule.nacos.param;
+package com.alibaba.csp.sentinel.dashboard.rule.nacos.gateway;
 
-import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.AuthorityRuleEntity;
-import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.FlowRuleEntity;
+import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiDefinition;
+import com.alibaba.csp.sentinel.dashboard.datasource.entity.gateway.ApiDefinitionEntity;
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.ParamFlowRuleEntity;
 import com.alibaba.csp.sentinel.dashboard.repository.rule.InMemoryRuleRepositoryAdapter;
 import com.alibaba.csp.sentinel.dashboard.rule.DynamicRuleProvider;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.DynamicNacosRuleProvider;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosConfigUtil;
-import com.alibaba.csp.sentinel.datasource.Converter;
-import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowRule;
 import com.alibaba.csp.sentinel.util.StringUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.nacos.api.config.ConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -36,37 +33,54 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author Eric Zhao
- * @since 1.4.0
+ *
+ * @author Fox
  */
-@Component("paramRuleNacosProvider")
-public class ParamRuleNacosProvider implements DynamicNacosRuleProvider<List<ParamFlowRuleEntity>> {
+@Component("gatewayApiRuleNacosProvider")
+public class GatewayApiRuleNacosProvider implements DynamicNacosRuleProvider<List<ApiDefinitionEntity>> {
 
     @Autowired
     private ConfigService configService;
-//    @Autowired
-//    private Converter<String, List<ParamFlowRuleEntity>> converter;
-
     @Autowired
-    private InMemoryRuleRepositoryAdapter<ParamFlowRuleEntity> repository;
-
+    private InMemoryRuleRepositoryAdapter<ApiDefinitionEntity> repository;
 
     @Override
-    public List<ParamFlowRuleEntity> getRules(String appName, String ip, Integer port) throws Exception {
-        String rules = configService.getConfig(appName + NacosConfigUtil.PARAM_FLOW_DATA_ID_POSTFIX,
-            NacosConfigUtil.GROUP_ID, 3000);
+    public List<ApiDefinitionEntity> getRules(String appName,String ip,Integer port) throws Exception {
+        String rules = configService.getConfig(appName + NacosConfigUtil.GATEWAY_API_DATA_ID_POSTFIX,
+                NacosConfigUtil.GROUP_ID, NacosConfigUtil.READ_TIMEOUT);
         if (StringUtil.isEmpty(rules)) {
             return new ArrayList<>();
         }
-        List<ParamFlowRule> list = JSON.parseArray(rules, ParamFlowRule.class);
+
+        // 注意 ApiDefinition的属性Set<ApiPredicateItem> predicateItems中元素 是接口类型，JSON解析丢失数据
+        // 重写实体类ApiDefinition2,再转换为ApiDefinition
+        List<ApiDefinition2> list = JSON.parseArray(rules, ApiDefinition2.class);
+
         return list.stream().map(rule ->
-                        ParamFlowRuleEntity.fromParamFlowRule(appName, ip, port, rule))
+                ApiDefinitionEntity.fromApiDefinition(appName, ip, port, rule.toApiDefinition()))
                 .collect(Collectors.toList());
     }
 
     @Override
     public void initRules(String app) throws Exception {
-        List<ParamFlowRuleEntity> rules = this.getRules(app);
+        List<ApiDefinitionEntity> rules = this.getRules(app);
         repository.initRules(rules, app);
     }
+
+//    public static void main(String[] args) {
+//        String rules = "[{\"apiName\":\"/pms/productInfo/${id}\",\"predicateItems\":[{\"matchStrategy\":1,\"pattern\":\"/pms/productInfo/\"}]}]";
+//
+//
+//        List<ApiDefinition> list = JSON.parseArray(rules, ApiDefinition.class);
+//        System.out.println(list);
+//
+//        List<ApiDefinition2> list2 = JSON.parseArray(rules, ApiDefinition2.class);
+//        System.out.println(list2);
+//
+//        System.out.println(list2.get(0).toApiDefinition());
+//
+//    }
+
 }
+
+

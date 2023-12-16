@@ -13,25 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.csp.sentinel.dashboard.rule.nacos.authority;
+package com.alibaba.csp.sentinel.dashboard.rule.nacos.gateway;
 
-import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.AuthorityRuleEntity;
-import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.DegradeRuleEntity;
-import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.FlowRuleEntity;
+import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayFlowRule;
+import com.alibaba.csp.sentinel.dashboard.datasource.entity.gateway.ApiDefinitionEntity;
+import com.alibaba.csp.sentinel.dashboard.datasource.entity.gateway.GatewayFlowRuleEntity;
 import com.alibaba.csp.sentinel.dashboard.repository.rule.InMemoryRuleRepositoryAdapter;
 import com.alibaba.csp.sentinel.dashboard.rule.DynamicRuleProvider;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.DynamicNacosRuleProvider;
 import com.alibaba.csp.sentinel.dashboard.rule.nacos.NacosConfigUtil;
-import com.alibaba.csp.sentinel.datasource.Converter;
-import com.alibaba.csp.sentinel.log.RecordLog;
-import com.alibaba.csp.sentinel.slots.block.authority.AuthorityRule;
 import com.alibaba.csp.sentinel.util.StringUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.nacos.api.config.ConfigService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -39,34 +33,33 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author Eric Zhao
- * @since 1.4.0
+ *
+ * @author Fox
  */
-@Component("authorityRuleNacosProvider")
-public class AuthorityRuleNacosProvider implements DynamicNacosRuleProvider<List<AuthorityRuleEntity>> {
+@Component("gatewayFlowRuleNacosProvider")
+public class GatewayFlowRuleNacosProvider implements DynamicNacosRuleProvider<List<GatewayFlowRuleEntity>> {
 
     @Autowired
     private ConfigService configService;
-//    @Autowired
-//    private Converter<String, List<AuthorityRuleEntity>> converter;
     @Autowired
-    private InMemoryRuleRepositoryAdapter<AuthorityRuleEntity> repository;
+    private InMemoryRuleRepositoryAdapter<GatewayFlowRuleEntity> repository;
+
     @Override
-    public List<AuthorityRuleEntity> getRules(String appName, String ip, Integer port) throws Exception {
-        String rules = configService.getConfig(appName + NacosConfigUtil.AUTHORITY_DATA_ID_POSTFIX,
-            NacosConfigUtil.GROUP_ID, 3000);
+    public List<GatewayFlowRuleEntity> getRules(String appName,String ip,Integer port) throws Exception {
+        String rules = configService.getConfig(appName + NacosConfigUtil.GATEWAY_FLOW_DATA_ID_POSTFIX,
+                NacosConfigUtil.GROUP_ID, NacosConfigUtil.READ_TIMEOUT);
         if (StringUtil.isEmpty(rules)) {
             return new ArrayList<>();
         }
-        List<AuthorityRule> list = JSON.parseArray(rules, AuthorityRule.class);
-        return list.stream().map(
-                authorityRule -> AuthorityRuleEntity.fromAuthorityRule(appName, ip, port, authorityRule))
+        List<GatewayFlowRule> list = JSON.parseArray(rules, GatewayFlowRule.class);
+        return list.stream().map(rule ->
+                GatewayFlowRuleEntity.fromGatewayFlowRule(appName, ip, port, rule))
                 .collect(Collectors.toList());
     }
 
     @Override
     public void initRules(String app) throws Exception {
-        List<AuthorityRuleEntity> rules = this.getRules(app);
+        List<GatewayFlowRuleEntity> rules = this.getRules(app);
         repository.initRules(rules, app);
     }
 }

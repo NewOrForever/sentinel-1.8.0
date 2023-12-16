@@ -74,6 +74,7 @@ final class GatewayRuleConverter {
             .setControlBehavior(gatewayRule.getControlBehavior())
             .setMaxQueueingTimeMs(gatewayRule.getMaxQueueingTimeoutMs())
             .setParamIdx(idx);
+        // 热点参数流控
         GatewayParamFlowItem gatewayItem = gatewayRule.getParamItem();
         // Apply the current idx to gateway rule item.
         gatewayItem.setIndex(idx);
