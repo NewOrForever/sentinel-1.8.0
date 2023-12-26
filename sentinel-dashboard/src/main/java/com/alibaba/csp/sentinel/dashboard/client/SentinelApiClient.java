@@ -549,6 +549,7 @@ public class SentinelApiClient {
     }
 
     public CompletableFuture<Void> setFlowRuleOfMachineAsync(String app, String ip, int port, List<FlowRuleEntity> rules) {
+        // ip：客户端ip，port：客户端与dashboard通信的端口
         return setRulesAsync(app, ip, port, FLOW_RULE_TYPE, rules);
     }
 

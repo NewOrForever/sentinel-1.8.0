@@ -36,6 +36,7 @@ import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.statistic.cache.CacheMap;
 import com.alibaba.csp.sentinel.util.TimeUtil;
+import com.alibaba.csp.sentinel.util.function.Predicate;
 
 /**
  * Rule checker for parameter flow control.
@@ -52,6 +53,17 @@ public final class ParamFlowChecker {
         }
 
         int paramIdx = rule.getParamIdx();
+        /**
+         * @see com.alibaba.csp.sentinel.adapter.gateway.common.param.GatewayParamParser#parseParameterFor(String, Object, Predicate)
+         * 解析到的参数是 new Object[0] 符合
+         * 1. 该资源没有设置网关流控规则
+         * 2. 该资源（对应的资源名称）既设置了 route 维度的网关流控规则，也设置了 自定义 Api 维度的网关流控规则
+         *
+         * 大部分应该还是 Object[0] 的情况才会进来的
+         * 假设网关流控规则有 3 个且都配置了参数 -> args.length 为 3，rule.getParamIndex() 最大为 2 （因为下标从 0 开始的）-> 3 > 2 不符合
+         * 假设网关流控规则有 5 个且 3 个配置了参数，2个没有配置参数 -> args.length 为 4，rule.getParamIndex() 最大为 3（index：0,1,2,3,3）-> 4 > 3 -> 不符合
+         * 假设网关流控规则有 3 个且都没有配置参数 -> args.length 为 1，rule.getParamIndex() 最大为 0（index：0,0,0）-> 1 > 0 -> 不符合
+          */
         if (args.length <= paramIdx) {
             return true;
         }
@@ -64,6 +76,7 @@ public final class ParamFlowChecker {
             value = ((ParamFlowArgument) value).paramFlowKey();
         }
         // If value is null, then pass
+        // 参数值为 null，直接通过
         if (value == null) {
             return true;
         }

@@ -50,12 +50,18 @@ public class FileDataSourceInit implements InitFunc {
         String flowRuleFile = "flowRule.json";
         String flowRulePath = flowRuleDir + File.separator + flowRuleFile;
 
+        /**
+         * 注册一个可读数据源，用于读取规则配置
+         */
         ReadableDataSource<String, List<FlowRule>> ds = new FileRefreshableDataSource<>(
             flowRulePath, source -> JSON.parseObject(source, new TypeReference<List<FlowRule>>() {})
         );
         // Register to flow rule manager.
         FlowRuleManager.register2Property(ds.getProperty());
 
+        /**
+         * 注册一个可写数据源，用于写入规则配置
+         */
         WritableDataSource<List<FlowRule>> wds = new FileWritableDataSource<>(flowRulePath, this::encodeJson);
         // Register to writable data source registry so that rules can be updated to file
         // when there are rules pushed from the Sentinel Dashboard.

@@ -23,6 +23,7 @@ import com.alibaba.csp.sentinel.EntryType;
 import com.alibaba.csp.sentinel.ResourceTypeConstants;
 import com.alibaba.csp.sentinel.adapter.gateway.common.SentinelGatewayConstants;
 import com.alibaba.csp.sentinel.adapter.gateway.common.param.GatewayParamParser;
+import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayRuleManager;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.GatewayCallbackManager;
 import com.alibaba.csp.sentinel.adapter.reactor.ContextConfig;
 import com.alibaba.csp.sentinel.adapter.reactor.EntryConfig;
@@ -30,6 +31,7 @@ import com.alibaba.csp.sentinel.adapter.reactor.SentinelReactorTransformer;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.api.GatewayApiMatcherManager;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.api.matcher.WebExchangeApiMatcher;
 
+import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -64,6 +66,14 @@ public class SentinelGatewayFilter implements GatewayFilter, GlobalFilter, Order
 
         Mono<Void> asyncResult = chain.filter(exchange);
         if (route != null) {
+            /**
+             * route 维度，微服务使用gateway 网关的情况下，routeId 为微服务的服务名
+             * 微服务使用gateway 的模式下该 route 必然是存在的，因为gateway 会根据微服务的服务名创建 route
+             * 所以使用 gateway 时 route 维度 entry 必然存在 -> route 维度必然会去走一遍 sentinel 的 slot chain
+             * @see com.alibaba.csp.sentinel.adapter.gateway.common.slot.GatewayFlowSlot#checkGatewayParamFlow
+             * @see GatewayRuleManager#getConvertedParamRules(String) 获取 routeId 对应的网关流控规则 ->
+             * 如果 route 维度的资源（route id）没有设置对应的流控规则（GatewayFlowRule 内部会转成 ParamFlowRule）、降级规则、系统规则 -> 所有的 slot check 都是直接不需要执行的
+              */
             String routeId = route.getId();
             Object[] params = paramParser.parseParameterFor(routeId, exchange,
                 r -> r.getResourceMode() == SentinelGatewayConstants.RESOURCE_MODE_ROUTE_ID);
@@ -76,10 +86,22 @@ public class SentinelGatewayFilter implements GatewayFilter, GlobalFilter, Order
             );
         }
 
+        /**
+         * 自定义 API 维度 -> 需要先去 Api 管理菜单中添加 Api 分组 -> 该 Api 分组名称就是自定义 API 维度的资源名称
+         * 这里要先获取到匹配的 Api 分组名称 -> 遍历所有的 Api 分组名称解析匹配的参数 -> 每个匹配的 api 分组都会创建一个 自定义API 维度的 entry
+         * -> 每个 APi 维度的 entry 也都会走一遍 sentinel 的 slot chain
+         * 总结：
+         * 1. 如果该请求有匹配的自定义 API 维度的资源，那么该请求会走两遍 sentinel 的 slot chain（route 维度 和 自定义 API 维度）
+         * 2. route 维度没校验通过直接抛异常，不会走自定义 API 维度的 slot chain -> route 维度校验通过则继续走自定义 API 维度的 slot chain
+         * 3. 如果设置了 2 个 自定义 API 维度的资源，且这两个资源都匹配了，那么该请求会走 3 次 sentinel 的 slot chain（route 维度 和 2个自定义 API 维度）
+         */
+        // 遍历自定义的 API 分组 ApiDefinition -> 获取与该请求匹配的 ApiDefinition 的名称
         Set<String> matchingApis = pickMatchingApiDefinitions(exchange);
         for (String apiName : matchingApis) {
+            // 解析请求中的参数是否和网关流控规则中设置的参数匹配 -> 如果匹配则返回参数值，否则返回 $NM (也就是 not match)
             Object[] params = paramParser.parseParameterFor(apiName, exchange,
                 r -> r.getResourceMode() == SentinelGatewayConstants.RESOURCE_MODE_CUSTOM_API_NAME);
+            // 每个匹配的 自定义 API 维度的资源都会创建一个 entry -> 也会走一遍 sentinel 的 slot chain
             asyncResult = asyncResult.transform(
                 new SentinelReactorTransformer<>(new EntryConfig(apiName, ResourceTypeConstants.COMMON_API_GATEWAY,
                     EntryType.IN, 1, params))

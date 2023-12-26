@@ -75,6 +75,13 @@ public class ModifyRulesCommandHandler implements CommandHandler<String> {
         if (FLOW_RULE_TYPE.equalsIgnoreCase(type)) {
             List<FlowRule> flowRules = JSONArray.parseArray(data, FlowRule.class);
             FlowRuleManager.loadRules(flowRules);
+            /**
+             * @see com.alibaba.csp.sentinel.datasource.FileWritableDataSource#write(java.lang.Object)
+             * 客户端如何将规则写入到本地文件中？
+             * 1. 引入sentinel-datasource-extension依赖
+             * 2. spi 机制，实现InitFunc接口，实现init方法，直接用 demo 工程中的 {@link com.alibaba.csp.sentinel.demo.file.rule.FileDataSourceInit#init()}
+             * 优化下：每个 rule 都去注册可读、可写数据源
+             */
             if (!writeToDataSource(getFlowDataSource(), flowRules)) {
                 result = WRITE_DS_FAILURE_MSG;
             }

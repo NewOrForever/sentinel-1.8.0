@@ -180,6 +180,7 @@ public final class GatewayRuleManager {
                     int idx = getIdxInternal(idxMap, resourceName);
                     // Convert to parameter flow rule.
                     if (paramFlowRules.add(GatewayRuleConverter.applyToParamRule(rule, idx))) {
+                        // idx + 1 为下一个参数的索引位置
                         idxMap.put(rule.getResource(), idx + 1);
                     }
                     // 缓存参数值的正则表达式
