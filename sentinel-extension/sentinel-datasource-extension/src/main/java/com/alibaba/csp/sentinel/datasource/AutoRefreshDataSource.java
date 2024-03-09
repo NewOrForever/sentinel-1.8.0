@@ -59,7 +59,9 @@ public abstract class AutoRefreshDataSource<S, T> extends AbstractDataSource<S, 
                     if (!isModified()) {
                         return;
                     }
+                    // 从数据源中加载sentinel rules
                     T newValue = loadConfig();
+                    // 更新sentinel rules 到客户端本地内存
                     getProperty().updateValue(newValue);
                 } catch (Throwable e) {
                     RecordLog.info("loadConfig exception", e);

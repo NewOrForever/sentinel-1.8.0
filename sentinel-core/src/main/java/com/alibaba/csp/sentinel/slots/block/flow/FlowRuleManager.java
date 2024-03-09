@@ -128,8 +128,10 @@ public class FlowRuleManager {
 
         @Override
         public void configUpdate(List<FlowRule> value) {
+            // 构建以资源名为key，流控规则 List 为value 的 Map
             Map<String, List<FlowRule>> rules = FlowRuleUtil.buildFlowRuleMap(value);
             if (rules != null) {
+                // 将原来的规则清空，然后将新的规则放入
                 flowRules.clear();
                 flowRules.putAll(rules);
             }

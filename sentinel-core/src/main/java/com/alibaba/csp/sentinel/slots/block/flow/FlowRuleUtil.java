@@ -109,10 +109,12 @@ public final class FlowRuleUtil {
             TrafficShapingController rater = generateRater(rule);
             rule.setRater(rater);
 
+            // 获取到流控规则对应的 资源名
             K key = groupFunction.apply(rule);
             if (key == null) {
                 continue;
             }
+            // 某一个资源对应的流控规则
             Set<FlowRule> flowRules = tmpMap.get(key);
 
             if (flowRules == null) {
@@ -123,6 +125,7 @@ public final class FlowRuleUtil {
 
             flowRules.add(rule);
         }
+        // 根据 clusterMode 和 limitApp 来进行排序
         Comparator<FlowRule> comparator = new FlowRuleComparator();
         for (Entry<K, Set<FlowRule>> entries : tmpMap.entrySet()) {
             List<FlowRule> rules = new ArrayList<>(entries.getValue());
