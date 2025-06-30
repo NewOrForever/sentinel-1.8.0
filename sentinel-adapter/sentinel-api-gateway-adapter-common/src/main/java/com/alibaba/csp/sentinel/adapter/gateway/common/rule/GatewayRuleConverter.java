@@ -81,6 +81,9 @@ final class GatewayRuleConverter {
         // Apply for pattern-based parameters.
         String valuePattern = gatewayItem.getPattern();
         if (valuePattern != null) {
+            // 这个还是挺重要的
+            // 生成参数不匹配时的默认不匹配参数流控项
+            // 参数不匹配则表示该流控规则直接 pass，所以这里不匹配参数流控的阈值设置的很大 -> 1000w -> 参数不匹配时必然就是能通过的
             paramRule.getParamFlowItemList().add(generateNonMatchPassParamItem());
         }
         return paramRule;

@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.alibaba.csp.sentinel.log.RecordLog;
+import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleUtil;
 import com.alibaba.csp.sentinel.util.AssertUtil;
@@ -158,6 +159,11 @@ public final class ParamFlowRuleUtil {
                 rule.setLimitApp(RuleConstant.LIMIT_APP_DEFAULT);
             }
 
+            /**
+             *  $NM 不匹配参数流控配置：@see {@link com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayRuleConverter.applyToParamRule}
+             *  SentinelGatewayFilter 中会解析参数是否匹配，不匹配则返回参数值为 $NM -> GatewayFlowSlot 中 {@link ParamFlowChecker#passDefaultLocalCheck(ResourceWrapper, ParamFlowRule, int, Object)}
+             *  取的阈值就是$NM 默认的 1000w -> 相当于不进行参数流控，直接 pass
+             */
             ParamFlowRuleUtil.fillExceptionFlowItems(rule);
 
             K key = groupFunction.apply(rule);

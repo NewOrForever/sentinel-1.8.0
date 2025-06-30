@@ -99,8 +99,8 @@ public class NacosConfig {
     public ConfigService nacosConfigService() throws Exception {
         // ConfigFactory.createConfigService("123.60.150.23:8848");
         Properties properties = new Properties();
-        properties.put(PropertyKeyConst.SERVER_ADDR, "123.60.150.23:8848");
-        properties.put(PropertyKeyConst.NAMESPACE, "");
+        properties.put(PropertyKeyConst.SERVER_ADDR, "192.168.50.171:8848");
+        properties.put(PropertyKeyConst.NAMESPACE, "3e9cf74e-264e-4f39-831a-e8597ce28cfa");
         return ConfigFactory.createConfigService(properties);
     }
 }

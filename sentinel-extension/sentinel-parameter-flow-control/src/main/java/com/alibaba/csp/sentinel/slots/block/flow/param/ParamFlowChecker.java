@@ -36,6 +36,7 @@ import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.statistic.cache.CacheMap;
 import com.alibaba.csp.sentinel.util.TimeUtil;
+import com.alibaba.csp.sentinel.util.function.Function;
 import com.alibaba.csp.sentinel.util.function.Predicate;
 
 /**
@@ -147,6 +148,10 @@ public final class ParamFlowChecker {
             return true;
         }
 
+        /**
+         * {@link ParamFlowRuleUtil#buildParamRuleMap(List, Function, Predicate, boolean)}
+         * $NM 是一个默认的参数不匹配后使用的流控规则，阈值 1000w，相当于该参数不匹配则不进行流控，直接pass
+         */
         // Calculate max token count (threshold)
         Set<Object> exclusionItems = rule.getParsedHotItems().keySet();
         long tokenCount = (long)rule.getCount();

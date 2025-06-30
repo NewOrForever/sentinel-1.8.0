@@ -16,18 +16,22 @@
 package com.alibaba.csp.sentinel.adapter.gateway.common.param;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.alibaba.csp.sentinel.adapter.gateway.common.SentinelGatewayConstants;
 import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayFlowRule;
 import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayParamFlowItem;
+import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayRuleConverter;
 import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayRuleManager;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowChecker;
 import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowRule;
+import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowRuleUtil;
 import com.alibaba.csp.sentinel.util.AssertUtil;
 import com.alibaba.csp.sentinel.util.StringUtil;
+import com.alibaba.csp.sentinel.util.function.Function;
 import com.alibaba.csp.sentinel.util.function.Predicate;
 
 /**
@@ -116,6 +120,11 @@ public class GatewayParamParser<T> {
              * 如果网关流控规则没有针对请求属性进行配置 -> 返回 new Object[0] 也就是没有参数
              * 如果网关流控规则针对请求属性进行了配置 -> 如果请求中的参数和规则设置的匹配则返回参数值，否则返回 $NM (也就是 not match)
              * @see GatewayParamParser#parseWithMatchStrategyInternal(int, String, String)
+             *
+             * $NM -> not match -> 也就是请求中的参数和规则设置的参数不匹配 -> 说明不需要进行流控
+             * 在更新流控规则时会构造好 $NM 对应的参数流控配置
+             * {@link GatewayRuleManager.GatewayRulePropertyListener#configUpdate(Set)} -> {@link GatewayRuleConverter#generateNonMatchPassParamItem()}
+             * -> {@link ParamFlowRuleUtil#buildParamRuleMap(List, Function, Predicate, boolean)}
               */
             String param = parseInternal(paramItem, request);
             /**

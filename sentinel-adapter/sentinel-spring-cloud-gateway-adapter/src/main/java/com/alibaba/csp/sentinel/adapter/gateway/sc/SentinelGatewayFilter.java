@@ -75,6 +75,14 @@ public class SentinelGatewayFilter implements GatewayFilter, GlobalFilter, Order
              * 如果 route 维度的资源（route id）没有设置对应的流控规则（GatewayFlowRule 内部会转成 ParamFlowRule）、降级规则、系统规则 -> 所有的 slot check 都是直接不需要执行的
               */
             String routeId = route.getId();
+            /**
+             * 实战步骤：
+             * 1. dashboard 修改网关流控规则 -> {@link GatewayRuleManager.GatewayRulePropertyListener#configUpdate(Set)} 更新配置（$NM 会预先设置好）
+             * 2. 通过网关访问 url -> SentinelGatewayFilter 中会进行参数匹配校验 -> 不匹配则返回 $NM，匹配则返回参数值
+             * 3. 进入 sentinel 的 slot chain -> 走 {@link com.alibaba.csp.sentinel.adapter.gateway.common.slot.GatewayFlowSlot}
+             *     -> 参数不匹配的情况下阈值取得是 $NM 对应的阈值 1000w -> 相当于不进行流控直接pass
+             *     -> 参数匹配的情况下取得是正常的流控阈值 -> 相当于正常的流控
+             */
             Object[] params = paramParser.parseParameterFor(routeId, exchange,
                 r -> r.getResourceMode() == SentinelGatewayConstants.RESOURCE_MODE_ROUTE_ID);
             String origin = Optional.ofNullable(GatewayCallbackManager.getRequestOriginParser())
